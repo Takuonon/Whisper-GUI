@@ -3,12 +3,14 @@ import requests
 import os
 
 # Streamlitアプリケーションの設定
-st.title("Whisper API 動画テキスト化ツール")
-st.write("動画ファイルをアップロードし、APIキーを入力してテキストに変換します。")
+st.title("Whisper API テキスト化ツール")
+st.write("ファイルをアップロードし、APIキーを入力してテキストに変換します。")
 
 # APIキーの入力とファイルアップロード
 api_key = st.text_input("OpenAI API Key", type="password")
-uploaded_file = st.file_uploader("動画ファイルをアップロード", type=["mp4", "mov", "mkv", "webm"])
+uploaded_file = st.file_uploader(
+    "音声または動画ファイルをアップロード", type=["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm", "mov", "mkv"]
+)
 
 # ボタンが押されたら処理を開始
 if st.button("変換を開始") and api_key and uploaded_file:
