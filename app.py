@@ -28,7 +28,7 @@ if st.button("変換を開始") and api_key and uploaded_file:
                 files={
                     "file": (uploaded_file.name, f),
                     "model": (None, "whisper-1"),
-                    "language": (None, "en"),  # 言語指定
+                    # "language": (None, "en"),  # 言語指定
                 },
             )
 
