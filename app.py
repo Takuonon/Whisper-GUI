@@ -28,18 +28,30 @@ if st.button("変換を開始") and api_key and uploaded_file:
                 files={
                     "file": (uploaded_file.name, f),
                     "model": (None, "whisper-1"),
+                    "timestamp_granularities": (None, "word"),  # 単語単位のタイムスタンプを指定
                     # "language": (None, "en"),  # 言語指定
                 },
             )
 
-        # 応答の処理
         if response.status_code == 200:
-            transcription = response.json().get("text", "")
-            st.write("テキスト化結果:")
-            st.text_area("変換されたテキスト", transcription)
-            st.download_button("結果をダウンロード", data=transcription, file_name="transcription.txt")
+            # レスポンスのJSON全体を取得
+            transcription = response.json()
+            
+            # 結果を画面に表示
+            st.write("テキスト化結果（JSON形式）:")
+            st.json(transcription)  # JSON全体を表示
+            
+            # JSONをダウンロード可能にする
+            import json
+            st.download_button(
+                label="結果をJSON形式でダウンロード",
+                data=json.dumps(transcription, ensure_ascii=False, indent=2),  # JSONを整形してダウンロード
+                file_name="transcription.json",
+                mime="application/json"
+            )
         else:
-            st.error(f"エラーが発生しました: {response.status_code}")
+            st.error(f"エラーが発生しました: {response.status_code}, {response.text}")
+
     except Exception as e:
         st.error(f"処理中にエラーが発生しました: {str(e)}")
     finally:
