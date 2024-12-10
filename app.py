@@ -27,9 +27,11 @@ if st.button("変換を開始") and api_key and uploaded_file:
                 headers={"Authorization": f"Bearer {api_key}"},
                 files={
                     "file": (uploaded_file.name, f),
-                    "model": (None, "whisper-1"),
-                    "timestamp_granularities": (None, "word"),  # 単語単位のタイムスタンプを指定
-                    # "language": (None, "en"),  # 言語指定
+                },
+                data={
+                    "model": "whisper-1",  # モデルを指定
+                    "response_format": "verbose_json",  # 詳細なJSONフォーマット
+                    "timestamp_granularities[]": "word",  # 単語単位のタイムスタンプを指定
                 },
             )
 
