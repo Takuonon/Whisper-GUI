@@ -1,15 +1,19 @@
-import streamlit as st
+import json
 import requests
-import os
+import streamlit as st
+import pandas as pd
 
-# Streamlitアプリケーションの設定
 st.title("Whisper API テキスト化ツール")
 st.write("ファイルをアップロードし、APIキーを入力してテキストに変換します。")
+st.write("※webm形式のファイルを推奨します。mp4形式の場合、正常に動作しない可能性があります。")
 
-# APIキーの入力とファイルアップロード
-api_key = st.text_input("OpenAI API Key", type="password")
-uploaded_file = st.file_uploader(
-    "音声または動画ファイルをアップロード", type=["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm", "mov", "mkv"]
+api_key = st.text_input("APIキーを入力", type="password")
+uploaded_file = st.file_uploader("音声ファイルをアップロード", type=["mp3", "wav", "webm", "mp4"])
+
+# ラジオボタンで言語指定オプションを選択
+language_option = st.radio(
+    "言語指定 (任意):",
+    ("オプションを指定しない", "日本語 (ja)", "英語 (en)")
 )
 
 # ボタンが押されたら処理を開始
@@ -18,6 +22,20 @@ if st.button("変換を開始") and api_key and uploaded_file:
     temp_file_path = f"./temp_{uploaded_file.name}"
     with open(temp_file_path, "wb") as f:
         f.write(uploaded_file.read())
+
+    # リクエスト用データパラメータ
+    data_params = {
+        "model": "whisper-1",
+        "response_format": "verbose_json",
+        "timestamp_granularities[]": "word",
+    }
+
+    # 選択された言語オプションに応じてlanguageパラメータを追加
+    if language_option == "日本語 (ja)":
+        data_params["language"] = "ja"
+    elif language_option == "英語 (en)":
+        data_params["language"] = "en"
+    # 「オプションを指定しない」場合は何も追加しない
 
     # Whisper APIリクエスト
     try:
@@ -28,26 +46,21 @@ if st.button("変換を開始") and api_key and uploaded_file:
                 files={
                     "file": (uploaded_file.name, f),
                 },
-                data={
-                    "model": "whisper-1",  # モデルを指定
-                    "response_format": "verbose_json",  # 詳細なJSONフォーマット
-                    "timestamp_granularities[]": "word",  # 単語単位のタイムスタンプを指定
-                },
+                data=data_params,
             )
 
         if response.status_code == 200:
             # レスポンスのJSON全体を取得
             transcription = response.json()
-            
-            # 結果を画面に表示
+
+            # テキスト化結果（JSON形式）を表示
             st.write("テキスト化結果（JSON形式）:")
-            st.json(transcription)  # JSON全体を表示
-            
+            st.json(transcription)
+
             # JSONをダウンロード可能にする
-            import json
             st.download_button(
                 label="結果をJSON形式でダウンロード",
-                data=json.dumps(transcription, ensure_ascii=False, indent=2),  # JSONを整形してダウンロード
+                data=json.dumps(transcription, ensure_ascii=False, indent=2),
                 file_name="transcription.json",
                 mime="application/json"
             )
@@ -55,7 +68,4 @@ if st.button("変換を開始") and api_key and uploaded_file:
             st.error(f"エラーが発生しました: {response.status_code}, {response.text}")
 
     except Exception as e:
-        st.error(f"処理中にエラーが発生しました: {str(e)}")
-    finally:
-        # 一時ファイルの削除
-        os.remove(temp_file_path)
+        st.error(f"例外が発生しました: {e}")
